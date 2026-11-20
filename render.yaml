@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: foundly-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRE_MINUTES
+        value: 10080
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: STORAGE_BACKEND
+        value: cloudinary
+      - key: CLOUDINARY_URL
+        sync: false

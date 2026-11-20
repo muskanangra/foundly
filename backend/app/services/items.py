@@ -11,7 +11,9 @@ from app.config import settings
 
 
 def image_url(image_path: str) -> str:
-    """Build the absolute image URL from a stored filename."""
+    """Build the absolute image URL from a stored path or Cloudinary URL."""
+    if image_path.startswith("http"):
+        return image_path
     return f"{settings.PUBLIC_BASE_URL}/uploads/{image_path}"
 
 

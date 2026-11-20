@@ -81,10 +81,11 @@ app.add_middleware(
     allow_headers=["*", "Authorization"],
 )
 
-# ── Static files ──────────────────────────────────────────────────────────────
-upload_dir = Path(settings.UPLOAD_DIR)
-upload_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
+# ── Static files (local backend only) ────────────────────────────────────────
+if settings.STORAGE_BACKEND == "local":
+    upload_dir = Path(settings.UPLOAD_DIR)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
@@ -134,6 +135,13 @@ async def websocket_endpoint(
                 break
     finally:
         manager.disconnect(websocket, user_id)
+
+
+# ── Health check ─────────────────────────────────────────────────────────────
+
+@app.get("/health", tags=["health"])
+def health():
+    return {"status": "ok"}
 
 
 # ── Error handlers ────────────────────────────────────────────────────────────
