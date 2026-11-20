@@ -46,32 +46,32 @@ export function Modal({ open, onClose, title, children, actions, className }: Mo
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
     >
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" aria-hidden="true" />
+      <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm" aria-hidden="true" />
 
       <div
         className={clsx(
-          'relative z-10 w-full max-w-md rounded-[10px] border border-line bg-surface shadow-xl',
+          'relative z-10 w-full max-w-md rounded-2xl border border-taupe bg-ivory shadow-xl',
           className,
         )}
       >
-        <div className="flex items-center justify-between border-b border-line px-6 py-4">
-          <h2 id="modal-title" className="font-mono text-xs font-semibold uppercase tracking-widest text-ink">
+        <div className="flex items-center justify-between border-b border-taupe/50 px-6 py-4">
+          <h2 id="modal-title" className="font-sans text-base font-semibold text-navy">
             {title}
           </h2>
           <button
             ref={firstFocusRef}
             onClick={onClose}
             aria-label="Close modal"
-            className="rounded-[5px] p-1 text-ink-soft hover:bg-surface-2 hover:text-ink transition-colors"
+            className="rounded-full p-1.5 text-sapphire hover:bg-champagne transition-colors"
           >
             <X size={16} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="px-6 py-5 text-sm text-ink-soft leading-relaxed">{children}</div>
+        <div className="px-6 py-5 text-base text-sapphire leading-relaxed">{children}</div>
 
         {actions && (
-          <div className="flex justify-end gap-3 border-t border-line px-6 py-4">
+          <div className="flex justify-end gap-3 border-t border-taupe/50 px-6 py-4">
             {actions}
           </div>
         )}

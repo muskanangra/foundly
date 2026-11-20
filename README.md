@@ -37,6 +37,13 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env — set DATABASE_URL to your Neon (or local Postgres) connection string
 # The JWT_SECRET is already filled with a strong random value
+#
+# ⚡ Performance tip for Neon:
+#   Use the POOLED connection string (hostname contains "-pooler", e.g.
+#   ep-xxx-pooler.region.aws.neon.tech) rather than the direct URL.
+#   Neon's HTTP proxy reduces connection overhead and cold-start latency.
+#   The first request after a few minutes idle may be slow while Neon
+#   wakes — the frontend shows skeletons during this time.
 
 # 4. Run database migrations (creates all tables + seeds 8 categories)
 alembic upgrade head

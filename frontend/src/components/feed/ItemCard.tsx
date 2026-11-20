@@ -1,7 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
 import clsx from 'clsx'
-import { PixelImage } from '../ui/PixelImage'
-import { Chip } from '../ui/Chip'
 import { StatusBadge } from '../ui/StatusBadge'
 import { formatRelativeTime } from '../../lib/time'
 import type { Item } from '../../api/types'
@@ -18,58 +16,59 @@ export function ItemCard({ item, linkState, showLink = true, showStatus = false,
   const location = useLocation()
   const backState = linkState ?? { from: `${location.pathname}${location.search}` }
   const idStr = `F-${String(item.id).padStart(4, '0')}`
-  const relTime = formatRelativeTime(item.created_at).toUpperCase()
 
   const content = (
     <div
       className={clsx(
-        'relative bg-surface border border-line rounded-[10px] overflow-hidden',
-        'transition-all duration-150 hover:border-accent hover:-translate-y-0.5',
+        'relative bg-champagne rounded-2xl overflow-hidden border border-taupe/30',
+        'transition-all duration-200 hover:-translate-y-1 hover:shadow-md',
         'group',
         className,
       )}
     >
       {/* Image — 4:3 */}
-      <div className="aspect-[4/3] relative overflow-hidden bg-surface-2">
-        <PixelImage
-          src={item.image_url || undefined}
-          reveal
-          pixelSize={8}
-          id={item.id}
-          alt={item.name}
-          className="w-full h-full"
-        />
+      <div className="aspect-[4/3] overflow-hidden bg-champagne">
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="font-display text-[40px] italic text-taupe/60" aria-hidden="true">F</span>
+          </div>
+        )}
       </div>
 
       {/* Info */}
-      <div className="p-3 flex flex-col gap-2">
-        {/* ID row */}
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-widest text-accent">
-            {idStr}
-          </span>
-          <span className="font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft">
-            {relTime}
-          </span>
-        </div>
-
+      <div className="p-3.5 flex flex-col gap-2">
         {/* Name */}
-        <h3 className="font-sans text-base font-medium text-ink leading-snug line-clamp-2">
+        <h3 className="font-sans text-[17px] font-bold text-navy leading-snug line-clamp-2">
           {item.name}
         </h3>
 
-        {/* Chips */}
-        <div className="flex flex-wrap gap-1.5">
-          <Chip>{item.category.name}</Chip>
-          <Chip>{item.location}</Chip>
-        </div>
+        {/* Category · Location */}
+        <p className="font-sans text-sm text-sapphire line-clamp-1">
+          {item.category.name} · {item.location}
+        </p>
+
+        {/* Time */}
+        <p className="font-display italic text-[18px] text-sapphire/70 leading-tight">
+          {formatRelativeTime(item.created_at)}
+        </p>
+
+        {/* Item ID */}
+        <p className="font-sans text-sm text-sapphire/50">{idStr}</p>
       </div>
 
       {/* Status overlay */}
       {showStatus && item.status !== 'active' && (
         <div
-          className="absolute inset-0 flex items-center justify-center rounded-[10px]"
-          style={{ background: 'rgba(243,246,251,0.6)' }}
+          className="absolute inset-0 flex items-center justify-center rounded-2xl"
+          style={{ background: 'rgba(231,226,206,0.75)' }}
         >
           <StatusBadge status={item.status} />
         </div>

@@ -119,9 +119,9 @@ export default function EditItemPage() {
   if (pageStatus === 'loading') {
     return (
       <div className="mx-auto max-w-4xl px-6 py-10">
-        <Skeleton className="h-8 w-48 mb-8" />
+        <Skeleton className="mb-8 h-10 w-48 rounded-xl" />
         <div className="flex flex-col gap-5">
-          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
         </div>
       </div>
     )
@@ -149,6 +149,7 @@ export default function EditItemPage() {
     )
   }
 
+  const categoryOptions = categories.map((c) => ({ value: String(c.id), label: c.name }))
   const selectedCat = categories.find((c) => c.id === Number(categoryId))
   const previewItem: Item = {
     ...item,
@@ -162,17 +163,17 @@ export default function EditItemPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-10 md:py-16">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-ink md:text-3xl">Edit post</h1>
-        <p className="mt-1 text-sm text-ink-soft">Update the details of your found item.</p>
+        <h1 className="font-display text-[40px] md:text-[48px] font-semibold text-navy leading-tight">
+          Edit post
+        </h1>
+        <p className="mt-2 font-sans text-base text-sapphire/70">Update the details of your found item.</p>
       </div>
 
       <div className="grid gap-10 md:grid-cols-[1fr_auto]">
         <div className="flex flex-col gap-5">
           <div>
-            <p className="mb-1.5 font-mono text-[0.65rem] font-semibold uppercase tracking-widest text-ink-soft">
-              Photo
-            </p>
-            <div className="relative aspect-[4/3] max-w-sm overflow-hidden rounded-[10px] border border-line">
+            <p className="mb-2 font-sans text-sm font-medium text-sapphire">Photo</p>
+            <div className="relative aspect-[4/3] max-w-sm overflow-hidden rounded-2xl bg-champagne border border-taupe/30">
               {imagePreview && (
                 <img src={imagePreview} alt="Current" className="h-full w-full object-cover" />
               )}
@@ -183,20 +184,20 @@ export default function EditItemPage() {
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                   className={`w-full h-full absolute inset-0 flex items-center justify-center transition-colors ${
-                    dragging ? 'bg-accent/20' : 'bg-transparent hover:bg-ink/5'
+                    dragging ? 'bg-sapphire/20' : 'bg-transparent hover:bg-navy/5'
                   }`}
                 >
                   {!imagePreview && (
-                    <div className="flex flex-col items-center gap-2 text-ink-soft">
+                    <div className="flex flex-col items-center gap-2 text-sapphire/60">
                       <ImageIcon size={24} />
-                      <p className="font-mono text-[0.6rem] uppercase tracking-widest">Click or drop to change</p>
+                      <p className="font-sans text-xs">Click or drop to change</p>
                     </div>
                   )}
                 </div>
-                <div className="relative z-10 rounded-[5px] border border-line bg-surface/90 p-1.5 shadow-sm">
+                <div className="relative z-10 rounded-full border border-taupe/30 bg-ivory/90 p-1.5 shadow-sm">
                   <X
                     size={14}
-                    className="text-ink"
+                    className="text-navy"
                     onClick={(e) => { e.preventDefault(); setImageFile(null); setImagePreview(item.image_url) }}
                   />
                 </div>
@@ -209,15 +210,18 @@ export default function EditItemPage() {
               </label>
             </div>
             {errors.image && (
-              <p role="alert" className="mt-1 text-xs text-danger">{errors.image}</p>
+              <p role="alert" className="mt-1 font-sans text-sm text-danger">{errors.image}</p>
             )}
           </div>
 
           <Input label="Item name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} />
-          <Select label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} error={errors.categoryId}>
-            <option value="">Select a category…</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </Select>
+          <Select
+            label="Category"
+            options={[{ value: '', label: 'Select a category…' }, ...categoryOptions]}
+            value={categoryId}
+            onChange={setCategoryId}
+            error={errors.categoryId}
+          />
           <Input label="Where was it found?" value={location} onChange={(e) => setLocation(e.target.value)} error={errors.location} />
           <Input label="When was it found?" type="datetime-local" value={foundAt} max={NOW()} onChange={(e) => setFoundAt(e.target.value)} error={errors.foundAt} />
           <Textarea label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
@@ -231,7 +235,7 @@ export default function EditItemPage() {
         </div>
 
         <div className="hidden md:flex flex-col items-start gap-3">
-          <p className="font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft/60">Preview</p>
+          <p className="font-sans text-xs text-sapphire/50 uppercase tracking-widest">Preview</p>
           <div className="w-52">
             <ItemCard item={previewItem} showLink={false} />
           </div>

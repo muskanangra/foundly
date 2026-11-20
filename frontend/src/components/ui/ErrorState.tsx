@@ -5,37 +5,23 @@ interface ErrorStateProps {
   onRetry?: () => void
 }
 
-function PixelBlocks() {
-  return (
-    <svg width="72" height="60" viewBox="0 0 72 60" fill="none" aria-hidden="true">
-      <rect x="8"  y="8"  width="12" height="12" rx="1" fill="#B8C8E8" />
-      <rect x="22" y="8"  width="12" height="12" rx="1" fill="#D6DEEB" />
-      <rect x="36" y="8"  width="12" height="12" rx="1" fill="#8AAACE" />
-      <rect x="50" y="8"  width="12" height="12" rx="1" fill="#E3ECFF" />
-      <rect x="8"  y="22" width="12" height="12" rx="1" fill="#6B8FB8" />
-      <rect x="22" y="22" width="12" height="12" rx="1" fill="#B8C8E8" />
-      <rect x="50" y="22" width="12" height="12" rx="1" fill="#D93A3A" opacity="0.5" />
-      <rect x="8"  y="36" width="12" height="12" rx="1" fill="#E3ECFF" />
-      <rect x="36" y="36" width="12" height="12" rx="1" fill="#D93A3A" opacity="0.3" />
-      <rect x="50" y="36" width="12" height="12" rx="1" fill="#B8C8E8" />
-    </svg>
-  )
-}
-
 export function ErrorState({
   message = "Can't reach the server. Check your connection and try again.",
   onRetry,
 }: ErrorStateProps) {
   return (
-    <div className="flex flex-col items-center gap-4 py-16 text-center">
-      <PixelBlocks />
-      <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold text-ink">Something went wrong</p>
-        <p className="max-w-sm text-xs text-ink-soft leading-relaxed">{message}</p>
+    <div className="flex flex-col items-center gap-5 py-16 text-center">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+        <circle cx="28" cy="28" r="24" stroke="#BEB7A7" strokeWidth="1.5" />
+        <path d="M20 20 L36 36 M36 20 L20 36" stroke="#A63D32" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+      </svg>
+      <div className="flex flex-col gap-2">
+        <p className="font-display text-[28px] font-[500] italic text-sapphire">Something went wrong</p>
+        <p className="max-w-sm text-base text-sapphire/70 leading-relaxed">{message}</p>
       </div>
       {onRetry && (
         <Button variant="secondary" size="sm" onClick={onRetry}>
-          Retry
+          Try again
         </Button>
       )}
     </div>

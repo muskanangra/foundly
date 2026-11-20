@@ -11,7 +11,9 @@ from app.models.user import User
 from app.schemas.item import ItemResponse, PaginatedItemsResponse
 from app.core.security import get_current_user, get_current_user_optional
 from app.services.storage import save_image
-from app.services.items import serialize_item, search_items_query
+from app.services.items import serialize_item, make_item_summary, db_list_items
+from app.dsa.search_index import search_index
+from app.dsa.sorting import merge_sort
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -53,6 +55,14 @@ def _item_response(item: FoundItem, current_user_id: Optional[int]) -> ItemRespo
     return ItemResponse.model_validate(serialize_item(item, current_user_id))
 
 
+def _item_response_from_summary(summary: dict, current_user_id: Optional[int]) -> ItemResponse:
+    """Build ItemResponse from a SearchIndex summary dict."""
+    return ItemResponse.model_validate({
+        **summary,
+        "is_owner": current_user_id is not None and summary["owner_id"] == current_user_id,
+    })
+
+
 # ── IMPORTANT: /mine must be declared before /{id} ───────────────────────────
 
 @router.get("/mine", response_model=list[ItemResponse])
@@ -88,10 +98,55 @@ def list_items(
 ):
     page_size = min(page_size, 50)
     page = max(page, 1)
+    current_user_id = current_user.id if current_user else None
 
-    items, total = search_items_query(
+    # ── Text search path: use SearchIndex ─────────────────────────────────────
+    if q and q.strip():
+        summaries = search_index.search(q.strip())
+
+        # Apply filters in Python
+        if category_id is not None:
+            summaries = [s for s in summaries if s["category"]["id"] == category_id]
+        if location:
+            loc_lower = location.lower()
+            summaries = [s for s in summaries if loc_lower in s["location"].lower()]
+        if date_from:
+            try:
+                dt_from = datetime.fromisoformat(date_from)
+                if dt_from.tzinfo is None:
+                    dt_from = dt_from.replace(tzinfo=timezone.utc)
+                dt_from = dt_from.replace(hour=0, minute=0, second=0, microsecond=0)
+                summaries = [s for s in summaries if s["found_at"] >= dt_from]
+            except ValueError:
+                pass
+        if date_to:
+            try:
+                dt_to = datetime.fromisoformat(date_to)
+                if dt_to.tzinfo is None:
+                    dt_to = dt_to.replace(tzinfo=timezone.utc)
+                dt_to = dt_to.replace(hour=23, minute=59, second=59, microsecond=999999)
+                summaries = [s for s in summaries if s["found_at"] <= dt_to]
+            except ValueError:
+                pass
+
+        # Sort with merge_sort by found_at
+        reverse = sort != "oldest"
+        summaries = merge_sort(summaries, key=lambda s: s["found_at"], reverse=reverse)
+
+        total = len(summaries)
+        offset = (page - 1) * page_size
+        page_items = summaries[offset: offset + page_size]
+
+        return PaginatedItemsResponse(
+            items=[_item_response_from_summary(s, current_user_id) for s in page_items],
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
+
+    # ── No text search: use DB query ──────────────────────────────────────────
+    items, total = db_list_items(
         db,
-        q=q,
         category_id=category_id,
         location=location,
         date_from=date_from,
@@ -100,8 +155,6 @@ def list_items(
         page=page,
         page_size=page_size,
     )
-
-    current_user_id = current_user.id if current_user else None
     return PaginatedItemsResponse(
         items=[_item_response(item, current_user_id) for item in items],
         total=total,
@@ -123,7 +176,6 @@ def create_item(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Validation
     name = name.strip()
     if len(name) < 2 or len(name) > 80:
         raise HTTPException(status_code=400, detail="name: must be between 2 and 80 characters")
@@ -154,9 +206,15 @@ def create_item(
     db.add(item)
     db.commit()
 
-    # Reload with category relationship
-    db.refresh(item)
     item = _load_item(db, item.id)
+
+    # Update search index
+    search_index.on_item_created(item.id, item.name, make_item_summary(item))
+
+    # Check alerts for a match (never fails item creation)
+    from app.services.matching import run_matching
+    run_matching(db, item)
+
     return _item_response(item, current_user.id)
 
 
@@ -181,6 +239,8 @@ def update_item(
 
     if item.status != "active":
         raise HTTPException(status_code=400, detail="Only active items can be edited")
+
+    old_name = item.name  # capture before mutation
 
     if name is not None:
         name = name.strip()
@@ -212,6 +272,10 @@ def update_item(
 
     db.commit()
     item = _load_item(db, item_id)
+
+    # Update search index
+    search_index.on_item_updated(old_name, item.id, item.name, make_item_summary(item))
+
     return _item_response(item, current_user.id)
 
 
@@ -250,7 +314,12 @@ def return_item(
     if item.status != "active":
         raise HTTPException(status_code=400, detail="Only active items can be marked as returned")
 
+    item_name = item.name  # capture before status change
     item.status = "returned"
     db.commit()
+
+    # Remove from search index
+    search_index.on_item_deactivated(item_id, item_name)
+
     item = _load_item(db, item_id)
     return _item_response(item, current_user.id)

@@ -28,9 +28,9 @@ const ToastContext = createContext<ToastContextValue | null>(null)
 let nextId = 0
 
 const icons: Record<ToastType, ReactNode> = {
-  success: <CheckCircle size={14} className="text-success shrink-0" aria-hidden="true" />,
-  error:   <XCircle    size={14} className="text-danger shrink-0"  aria-hidden="true" />,
-  info:    <Info       size={14} className="text-accent shrink-0"  aria-hidden="true" />,
+  success: <CheckCircle size={15} className="text-success shrink-0" aria-hidden="true" />,
+  error:   <XCircle    size={15} className="text-danger  shrink-0" aria-hidden="true" />,
+  info:    <Info       size={15} className="text-sapphire shrink-0" aria-hidden="true" />,
 }
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
@@ -48,18 +48,18 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       role="alert"
       aria-live="polite"
       className={clsx(
-        'flex items-start gap-3 rounded-[10px] border border-line bg-surface px-4 py-3',
+        'flex items-start gap-3 rounded-2xl border border-taupe/60 bg-ivory px-4 py-3',
         'shadow-lg',
       )}
     >
       {icons[toast.type]}
-      <p className="flex-1 font-sans text-xs text-ink leading-snug">{toast.message}</p>
+      <p className="flex-1 font-sans text-sm text-navy leading-snug">{toast.message}</p>
       <button
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss notification"
-        className="text-ink-soft hover:text-ink transition-colors shrink-0"
+        className="text-sapphire/50 hover:text-sapphire transition-colors shrink-0 rounded-full p-0.5"
       >
-        <X size={12} aria-hidden="true" />
+        <X size={13} aria-hidden="true" />
       </button>
     </div>
   )
@@ -83,7 +83,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {createPortal(
         <div
           aria-label="Notifications"
-          className="fixed bottom-24 right-4 z-50 flex w-80 flex-col gap-2 md:right-6 md:bottom-8"
+          className="fixed bottom-4 right-4 z-50 flex w-80 flex-col gap-2 md:right-6"
         >
           {toasts.map((t) => (
             <ToastItem key={t.id} toast={t} onDismiss={dismiss} />

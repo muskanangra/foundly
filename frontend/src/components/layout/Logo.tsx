@@ -2,30 +2,35 @@ import { clsx } from 'clsx'
 
 interface LogoProps {
   className?: string
-  iconOnly?: boolean
+  size?: 'sm' | 'md' | 'lg'
+  onDark?: boolean
 }
 
-export function Logo({ className, iconOnly = false }: LogoProps) {
+export function Logo({ className, size = 'md', onDark = false }: LogoProps) {
+  const sizeClass = {
+    sm: 'text-[20px]',
+    md: 'text-[24px]',
+    lg: 'text-[32px]',
+  }[size]
+
   return (
-    <span className={clsx('inline-flex items-center gap-2 select-none', className)}>
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+    <span className={clsx('inline-flex items-center gap-1 select-none', className)}>
+      <span
+        className={clsx(
+          'font-display font-semibold italic leading-none',
+          sizeClass,
+          onDark ? 'text-ivory' : 'text-navy',
+        )}
+      >
+        Foundly
+      </span>
+      <span
+        className="text-sapphire font-sans text-[8px] leading-none"
+        style={{ marginBottom: '2px' }}
         aria-hidden="true"
       >
-        <rect x="4" y="4" width="7" height="7" fill="var(--color-accent)" />
-        <rect x="13" y="4" width="7" height="7" fill="var(--color-accent)" opacity="0.5" />
-        <rect x="4" y="13" width="7" height="7" fill="var(--color-accent)" opacity="0.5" />
-        <rect x="13" y="13" width="7" height="7" fill="var(--color-accent)" />
-      </svg>
-      {!iconOnly && (
-        <span className="font-mono text-xs font-bold tracking-wider text-ink uppercase">
-          Foundly
-        </span>
-      )}
+        ●
+      </span>
     </span>
   )
 }

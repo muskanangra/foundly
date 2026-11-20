@@ -23,7 +23,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
   return (
     <>
       {idx > 0 && <span>{text.slice(0, idx)}</span>}
-      <span className="font-semibold text-accent">{text.slice(idx, idx + query.length)}</span>
+      <span className="font-semibold text-sapphire">{text.slice(idx, idx + query.length)}</span>
       {idx + query.length < text.length && <span>{text.slice(idx + query.length)}</span>}
     </>
   )
@@ -101,8 +101,8 @@ export function SearchBar({ initialQ, onSearch }: SearchBarProps) {
       <label htmlFor="feed-search" className="sr-only">Search found items</label>
       <div className="relative flex items-center">
         <Search
-          size={18}
-          className="pointer-events-none absolute left-5 text-ink-soft"
+          size={16}
+          className="pointer-events-none absolute left-4 text-sapphire/50"
           aria-hidden="true"
         />
         <input
@@ -124,11 +124,10 @@ export function SearchBar({ initialQ, onSearch }: SearchBarProps) {
             isOpen && activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined
           }
           className={clsx(
-            'w-full rounded-[5px] border border-line bg-surface py-3.5 pl-12 pr-12',
-            'text-sm text-ink placeholder:text-ink-soft',
+            'w-full h-12 rounded-xl border border-taupe bg-ivory pl-10 pr-10',
+            'font-sans text-base text-navy placeholder:text-taupe',
             'outline-none transition-colors',
-            'focus:border-accent focus:ring-2 focus:ring-accent/20',
-            'h-14',
+            'focus:border-sapphire focus:ring-2 focus:ring-sapphire/15',
           )}
         />
         {value && (
@@ -136,7 +135,7 @@ export function SearchBar({ initialQ, onSearch }: SearchBarProps) {
             type="button"
             onClick={handleClear}
             aria-label="Clear search"
-            className="absolute right-4 rounded-[5px] p-1 text-ink-soft hover:text-ink transition-colors"
+            className="absolute right-4 rounded-full p-0.5 text-sapphire/50 hover:text-navy transition-colors"
           >
             <X size={14} aria-hidden="true" />
           </button>
@@ -148,7 +147,7 @@ export function SearchBar({ initialQ, onSearch }: SearchBarProps) {
           id={listboxId}
           role="listbox"
           aria-label="Search suggestions"
-          className="absolute top-full left-0 right-0 z-20 mt-1 overflow-hidden rounded-[5px] border border-line bg-surface shadow-xl"
+          className="absolute top-full left-0 right-0 z-20 mt-1 overflow-hidden rounded-xl border border-taupe bg-ivory shadow-xl"
         >
           {suggestions.map((s, i) => (
             <li
@@ -158,10 +157,10 @@ export function SearchBar({ initialQ, onSearch }: SearchBarProps) {
               aria-selected={i === activeIndex}
               onMouseDown={() => handleSelectSuggestion(s)}
               className={clsx(
-                'cursor-pointer px-5 py-2.5 text-sm transition-colors',
+                'cursor-pointer px-4 py-3 font-sans text-base transition-colors',
                 i === activeIndex
-                  ? 'bg-accent-tint text-accent'
-                  : 'text-ink-soft hover:bg-surface-2 hover:text-ink',
+                  ? 'bg-champagne text-sapphire'
+                  : 'text-sapphire/70 hover:bg-champagne hover:text-navy',
               )}
             >
               <HighlightedText text={s} query={value} />

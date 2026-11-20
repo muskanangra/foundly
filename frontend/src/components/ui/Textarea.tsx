@@ -12,21 +12,21 @@ export function Textarea({ label, error, helper, className, id, ...props }: Text
   const textareaId = id ?? generatedId
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={textareaId} className="font-mono text-[0.65rem] font-semibold uppercase tracking-widest text-ink-soft">
+        <label htmlFor={textareaId} className="font-sans text-sm font-medium text-sapphire">
           {label}
         </label>
       )}
       <textarea
         id={textareaId}
         className={clsx(
-          'w-full rounded-[5px] border bg-surface px-4 py-2.5 text-sm text-ink',
-          'placeholder:text-ink-soft resize-y min-h-[100px]',
+          'w-full rounded-xl border bg-ivory px-4 py-3 text-base text-navy',
+          'placeholder:text-taupe resize-y min-h-[100px]',
           'transition-colors duration-150 outline-none',
           error
-            ? 'border-danger focus:border-danger focus:ring-1 focus:ring-danger/30'
-            : 'border-line focus:border-accent focus:ring-1 focus:ring-accent/30',
+            ? 'border-danger focus:border-danger focus:ring-2 focus:ring-danger/20'
+            : 'border-taupe focus:border-sapphire focus:ring-2 focus:ring-sapphire/15',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           className,
         )}
@@ -41,12 +41,12 @@ export function Textarea({ label, error, helper, className, id, ...props }: Text
         {...props}
       />
       {error && (
-        <p id={`${textareaId}-error`} role="alert" className="text-xs text-danger">
+        <p id={`${textareaId}-error`} role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}
       {!error && helper && (
-        <p id={`${textareaId}-helper`} className="text-xs text-ink-soft">
+        <p id={`${textareaId}-helper`} className="text-sm text-sapphire/70">
           {helper}
         </p>
       )}

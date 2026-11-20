@@ -1,27 +1,15 @@
-import { Skeleton } from '../ui/Loader'
-
 export function ItemCardSkeleton() {
   return (
     <div
-      className="bg-surface border border-line rounded-[10px] overflow-hidden"
+      className="rounded-2xl bg-champagne overflow-hidden border border-taupe/30 animate-pulse"
       aria-hidden="true"
     >
-      {/* Image */}
-      <Skeleton className="aspect-[4/3] w-full rounded-none" />
-      {/* Info */}
-      <div className="p-3 flex flex-col gap-2">
-        {/* ID row */}
-        <div className="flex justify-between gap-2">
-          <Skeleton className="h-3 w-14" />
-          <Skeleton className="h-3 w-16" />
-        </div>
-        {/* Name */}
-        <Skeleton className="h-4 w-4/5" />
-        {/* Chips */}
-        <div className="flex gap-1.5">
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-16" />
-        </div>
+      <div className="aspect-[4/3] bg-taupe/20" />
+      <div className="p-3.5 flex flex-col gap-2">
+        <div className="h-5 w-3/4 rounded-lg bg-taupe/20" />
+        <div className="h-4 w-1/2 rounded-lg bg-taupe/20" />
+        <div className="h-4 w-2/5 rounded-lg bg-taupe/20" />
+        <div className="h-3 w-16 rounded-lg bg-taupe/20" />
       </div>
     </div>
   )

@@ -40,25 +40,25 @@ export default function ConversationPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl">
-        <div className="flex h-[calc(100vh-7rem)]">
-          <div className="hidden md:flex w-80 lg:w-96 shrink-0 flex-col border-r border-line bg-surface">
-            <div className="border-b border-line px-5 py-4">
-              <div className="h-5 w-24 animate-pulse rounded-[5px] bg-surface-2" />
+        <div className="flex h-[calc(100vh-4rem)] border-b border-taupe/40">
+          <div className="hidden md:flex w-80 lg:w-96 shrink-0 flex-col border-r border-taupe/40 bg-ivory">
+            <div className="border-b border-taupe/40 px-5 py-4">
+              <div className="h-8 w-24 animate-pulse rounded-xl bg-champagne" />
             </div>
-            <div className="flex flex-col divide-y divide-line">
+            <div className="flex flex-col divide-y divide-taupe/30">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex gap-3 p-4 animate-pulse">
-                  <div className="h-12 w-12 shrink-0 rounded-[5px] bg-surface-2" />
+                  <div className="h-12 w-12 shrink-0 rounded-xl bg-champagne" />
                   <div className="flex flex-1 flex-col gap-2 justify-center">
-                    <div className="h-3 w-24 rounded bg-surface-2" />
-                    <div className="h-2.5 w-40 rounded bg-surface-2" />
+                    <div className="h-3 w-24 rounded-lg bg-champagne" />
+                    <div className="h-2.5 w-40 rounded-lg bg-champagne" />
                   </div>
                 </div>
               ))}
             </div>
           </div>
           <div className="flex flex-1 items-center justify-center">
-            <div className="h-5 w-32 animate-pulse rounded-[5px] bg-surface-2" />
+            <div className="h-5 w-32 animate-pulse rounded-xl bg-champagne" />
           </div>
         </div>
       </div>
@@ -75,11 +75,11 @@ export default function ConversationPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="flex h-[calc(100vh-7rem)]">
+      <div className="flex h-[calc(100vh-4rem)] border-b border-taupe/40">
         {/* Sidebar — desktop only */}
-        <div className="hidden md:flex w-80 lg:w-96 shrink-0 flex-col border-r border-line bg-surface">
-          <div className="border-b border-line px-5 py-4">
-            <h1 className="text-lg font-semibold text-ink">Chats</h1>
+        <div className="hidden md:flex w-80 lg:w-96 shrink-0 flex-col border-r border-taupe/40 bg-ivory">
+          <div className="border-b border-taupe/40 px-5 py-4">
+            <h1 className="font-display text-[32px] font-semibold text-navy leading-tight">Chats</h1>
           </div>
           <div className="flex-1 overflow-y-auto">
             <ConversationList conversations={conversations} loading={false} />
@@ -89,6 +89,7 @@ export default function ConversationPage() {
         {/* Conversation — full width on mobile, right panel on desktop */}
         <div className="flex flex-1 flex-col">
           <ConversationView
+            key={conversation.id}
             conversation={conversation}
             onResolved={handleResolved}
             showBackButton

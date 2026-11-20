@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'motion/react'
-import { MonoLabel } from '../ui/MonoLabel'
-import { Skeleton } from '../ui/Loader'
 import { fetchStats, type StatsResponse } from '../../api/stats'
 
 type LoadState = 'loading' | 'success' | 'error'
@@ -29,48 +27,45 @@ function useCountUp(target: number | null, duration = 1800) {
   return display
 }
 
-interface StatCardProps {
+interface StatItemProps {
   label: string
   value: number | null
   status: LoadState
+  delay?: number
+  inView: boolean
 }
 
-function StatCard({ label, value, status }: StatCardProps) {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true })
+function StatItem({ label, value, status, delay = 0, inView }: StatItemProps) {
   const count = useCountUp(inView && status === 'success' ? value : null)
 
   return (
-    <div
-      ref={ref}
-      className="flex flex-col gap-3 rounded-[10px] border border-line bg-surface p-8"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay, ease: 'easeOut' }}
+      className="flex flex-col gap-2 py-10 border-t border-navy/10"
     >
-      <MonoLabel>{label}</MonoLabel>
       {status === 'loading' && (
-        <>
-          <Skeleton className="h-14 w-32" />
-          <Skeleton className="h-3 w-20" />
-        </>
+        <div className="h-16 w-32 rounded-xl bg-champagne animate-pulse" aria-hidden="true" />
       )}
       {status === 'success' && value !== null && (
         <span
-          className="font-display text-6xl font-black text-ink md:text-7xl"
-          aria-label={`${count} ${label.toLowerCase()}`}
+          className="font-display text-[72px] md:text-[96px] font-semibold text-navy leading-none"
+          aria-label={`${count} ${label}`}
         >
           {count.toLocaleString()}
         </span>
       )}
       {status === 'error' && (
-        <div className="flex flex-col gap-1">
-          <span className="font-display text-6xl font-black text-ink-soft/40 md:text-7xl">
-            —
-          </span>
-          <p className="font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft/50">
-            Awaiting Data
-          </p>
-        </div>
+        <span className="font-display text-[72px] md:text-[96px] font-semibold text-sapphire/30 leading-none">
+          —
+        </span>
       )}
-    </div>
+      <p className="font-sans text-base font-medium text-sapphire">{label}</p>
+      {status === 'error' && (
+        <p className="font-sans text-sm text-sapphire/50">Waiting for the first finds</p>
+      )}
+    </motion.div>
   )
 }
 
@@ -92,24 +87,19 @@ export function LiveStats() {
       id="stats"
       ref={ref}
       aria-label="Live Foundly statistics"
-      className="mx-auto max-w-6xl px-6 py-24"
+      className="bg-ivory"
     >
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="mb-10 flex flex-col gap-3"
-      >
-        <MonoLabel>By the numbers</MonoLabel>
-        <h2 className="text-2xl font-semibold text-ink md:text-3xl">
+      <div className="mx-auto max-w-[1200px] px-6 py-24">
+        <h2 className="font-display text-[40px] md:text-[52px] font-semibold text-navy leading-tight mb-4">
           A community growing every day.
         </h2>
-      </motion.div>
+        <p className="font-sans text-base text-sapphire/70 mb-10">Live campus numbers, updated in real time.</p>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Active listings"  value={stats?.active_items ?? null}  status={status} />
-        <StatCard label="Items returned"   value={stats?.returned_items ?? null} status={status} />
-        <StatCard label="Members"          value={stats?.users ?? null}          status={status} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0">
+          <StatItem label="Active listings"  value={stats?.active_items ?? null}  status={status} delay={0}    inView={inView} />
+          <StatItem label="Items returned"   value={stats?.returned_items ?? null} status={status} delay={0.1}  inView={inView} />
+          <StatItem label="Members"          value={stats?.users ?? null}          status={status} delay={0.2}  inView={inView} />
+        </div>
       </div>
     </section>
   )

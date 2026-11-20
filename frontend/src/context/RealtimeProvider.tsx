@@ -18,6 +18,7 @@ interface RealtimeContextValue {
   subscribe: (type: EventType, cb: EventCallback) => () => void
   unreadCount: number
   clearUnread: () => void
+  refreshUnreadCount: () => void
 }
 
 const RealtimeContext = createContext<RealtimeContextValue | null>(null)
@@ -136,8 +137,12 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
 
   const clearUnread = useCallback(() => setUnreadCount(0), [])
 
+  const refreshUnreadCount = useCallback(() => {
+    getUnreadCount().then(({ count }) => { if (mountedRef.current) setUnreadCount(count) }).catch(() => {})
+  }, [])
+
   return (
-    <RealtimeContext.Provider value={{ subscribe, unreadCount, clearUnread }}>
+    <RealtimeContext.Provider value={{ subscribe, unreadCount, clearUnread, refreshUnreadCount }}>
       {children}
     </RealtimeContext.Provider>
   )

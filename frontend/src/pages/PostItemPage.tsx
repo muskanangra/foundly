@@ -103,6 +103,7 @@ export default function PostItemPage() {
     }
   }
 
+  const categoryOptions = categories.map((c) => ({ value: String(c.id), label: c.name }))
   const selectedCat = categories.find((c) => c.id === Number(categoryId))
   const previewItem = {
     id: 0,
@@ -120,8 +121,10 @@ export default function PostItemPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-10 md:py-16">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-ink md:text-3xl">Post a found item</h1>
-        <p className="mt-1 text-sm text-ink-soft">
+        <h1 className="font-display text-[40px] md:text-[48px] font-semibold text-navy leading-tight">
+          Post a find
+        </h1>
+        <p className="mt-2 font-sans text-base text-sapphire/70">
           Help reunite this item with its owner by posting it on Foundly.
         </p>
       </div>
@@ -130,16 +133,14 @@ export default function PostItemPage() {
         <div className="flex flex-col gap-5">
           {/* Image dropzone */}
           <div>
-            <p className="mb-1.5 font-mono text-[0.65rem] font-semibold uppercase tracking-widest text-ink-soft">
-              Photo
-            </p>
+            <p className="mb-2 font-sans text-sm font-medium text-sapphire">Photo</p>
             {imagePreview ? (
-              <div className="relative aspect-[4/3] max-w-sm overflow-hidden rounded-[10px] border border-line">
+              <div className="relative aspect-[4/3] max-w-sm overflow-hidden rounded-2xl bg-champagne border border-taupe/30">
                 <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
                 <button
                   onClick={removeImage}
                   aria-label="Remove image"
-                  className="absolute right-2 top-2 rounded-[5px] bg-surface/90 p-1.5 text-ink hover:bg-surface shadow-sm transition-colors border border-line"
+                  className="absolute right-3 top-3 rounded-full bg-ivory/90 p-1.5 text-navy hover:bg-ivory shadow-sm transition-colors border border-taupe/30"
                 >
                   <X size={14} />
                 </button>
@@ -151,20 +152,20 @@ export default function PostItemPage() {
                   onDragLeave={() => setDragging(false)}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
-                  className={`flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-3 rounded-[10px] border-2 border-dashed transition-colors ${
+                  className={`flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed transition-colors ${
                     dragging
-                      ? 'border-accent bg-accent-tint'
-                      : 'border-line bg-surface hover:border-accent/50'
+                      ? 'border-sapphire bg-champagne'
+                      : 'border-taupe bg-champagne hover:border-sapphire/50'
                   }`}
                 >
-                  <div className="rounded-[5px] bg-surface-2 p-3 text-ink-soft">
+                  <div className="rounded-xl bg-ivory p-3 text-sapphire/60">
                     <ImageIcon size={24} aria-hidden="true" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium text-ink">
-                      <span className="text-accent">Click to upload</span> or drag and drop
+                    <p className="font-sans text-sm font-medium text-sapphire">
+                      <span className="text-navy">Click to upload</span> or drag and drop
                     </p>
-                    <p className="mt-0.5 font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft">
+                    <p className="mt-0.5 font-sans text-xs text-sapphire/50">
                       JPEG · PNG · WebP · Max 5 MB
                     </p>
                   </div>
@@ -178,7 +179,7 @@ export default function PostItemPage() {
               </label>
             )}
             {errors.image && (
-              <p role="alert" className="mt-1 text-xs text-danger">{errors.image}</p>
+              <p role="alert" className="mt-1 font-sans text-sm text-danger">{errors.image}</p>
             )}
           </div>
 
@@ -191,15 +192,11 @@ export default function PostItemPage() {
           />
           <Select
             label="Category"
+            options={[{ value: '', label: 'Select a category…' }, ...categoryOptions]}
             value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
+            onChange={setCategoryId}
             error={errors.categoryId}
-          >
-            <option value="">Select a category…</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </Select>
+          />
           <Input
             label="Where was it found?"
             value={location}
@@ -226,7 +223,7 @@ export default function PostItemPage() {
 
           <div className="flex gap-3 pt-2">
             <Button variant="primary" size="md" loading={loading} onClick={handleSubmit}>
-              {loading ? 'Posting…' : 'Post item'}
+              {loading ? 'Posting…' : 'Post a find'}
             </Button>
             <Button variant="ghost" size="md" onClick={() => navigate(-1)}>
               Cancel
@@ -236,7 +233,7 @@ export default function PostItemPage() {
 
         {/* Live preview */}
         <div className="hidden md:flex flex-col items-start gap-3">
-          <p className="font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft/60">Preview</p>
+          <p className="font-sans text-xs text-sapphire/50 uppercase tracking-widest">Preview</p>
           <div className="w-52">
             <ItemCard item={previewItem} showLink={false} />
           </div>

@@ -57,27 +57,31 @@ export default function MyPostsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10 md:py-16">
-      <div className="mb-8 flex items-center justify-between gap-4">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-ink md:text-3xl">My Posts</h1>
-          <p className="mt-1 text-sm text-ink-soft">Items you've posted as found on campus.</p>
+          <h1 className="font-display text-[40px] md:text-[48px] font-semibold text-navy leading-tight">
+            My Posts
+          </h1>
+          <p className="mt-2 font-sans text-base text-sapphire/70">
+            Items you've posted as found on campus.
+          </p>
         </div>
         <Button variant="primary" size="md" onClick={() => navigate('/post')}>
           <PlusCircle size={14} aria-hidden="true" />
-          Post item
+          Post a find
         </Button>
       </div>
 
       {/* Tabs */}
-      <div className="mb-8 flex gap-1 border-b border-line">
+      <div className="mb-8 flex gap-6 border-b border-taupe/40">
         {(['active', 'closed'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`pb-3 px-4 font-mono text-xs font-semibold uppercase tracking-widest transition-colors ${
+            className={`pb-3 font-sans text-[15px] font-medium transition-colors relative ${
               tab === t
-                ? 'border-b-2 border-accent text-accent -mb-px'
-                : 'text-ink-soft hover:text-ink'
+                ? 'text-navy after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-navy after:rounded-t-sm'
+                : 'text-sapphire/50 hover:text-sapphire'
             }`}
           >
             {t === 'active' ? `Active (${activeItems.length})` : `Returned / Removed (${closedItems.length})`}
@@ -103,7 +107,7 @@ export default function MyPostsPage() {
               ? "You haven't posted any found items yet."
               : 'None of your posts have been returned or removed yet.'
           }
-          actionLabel={tab === 'active' ? 'Post your first item' : undefined}
+          actionLabel={tab === 'active' ? 'Post a find' : undefined}
           onAction={tab === 'active' ? () => navigate('/post') : undefined}
         />
       )}
@@ -159,7 +163,7 @@ export default function MyPostsPage() {
           </>
         }
       >
-        <p className="text-sm text-ink-soft">
+        <p className="font-sans text-base text-sapphire/70">
           Are you sure you have returned this item? This will remove it from the active listings and
           the post will be closed.
         </p>

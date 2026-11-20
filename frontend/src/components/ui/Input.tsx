@@ -12,21 +12,24 @@ export function Input({ label, error, helper, className, id, ...props }: InputPr
   const inputId = id ?? generatedId
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={inputId} className="font-mono text-[0.65rem] font-semibold uppercase tracking-widest text-ink-soft">
+        <label
+          htmlFor={inputId}
+          className="font-sans text-sm font-medium text-sapphire"
+        >
           {label}
         </label>
       )}
       <input
         id={inputId}
         className={clsx(
-          'w-full rounded-[5px] border bg-surface px-4 py-2.5 text-sm text-ink',
-          'placeholder:text-ink-soft min-h-[44px]',
+          'w-full rounded-xl border bg-ivory px-4 text-base text-navy',
+          'placeholder:text-taupe h-12',
           'transition-colors duration-150 outline-none',
           error
-            ? 'border-danger focus:border-danger focus:ring-1 focus:ring-danger/30'
-            : 'border-line focus:border-accent focus:ring-1 focus:ring-accent/30',
+            ? 'border-danger focus:border-danger focus:ring-2 focus:ring-danger/20'
+            : 'border-taupe focus:border-sapphire focus:ring-2 focus:ring-sapphire/15',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           className,
         )}
@@ -37,12 +40,12 @@ export function Input({ label, error, helper, className, id, ...props }: InputPr
         {...props}
       />
       {error && (
-        <p id={`${inputId}-error`} role="alert" className="text-xs text-danger">
+        <p id={`${inputId}-error`} role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}
       {!error && helper && (
-        <p id={`${inputId}-helper`} className="text-xs text-ink-soft">
+        <p id={`${inputId}-helper`} className="text-sm text-sapphire/70">
           {helper}
         </p>
       )}

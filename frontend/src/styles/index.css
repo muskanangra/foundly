@@ -1,22 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Design tokens ── */
-  --color-bg:           #F3F6FB;
-  --color-surface:      #FFFFFF;
-  --color-surface-2:    #E9EEF7;
-  --color-line:         #D6DEEB;
-  --color-ink:          #0A1428;
-  --color-ink-soft:     #4B5A75;
-  --color-accent:       #2F6BFF;
-  --color-accent-ink:   #1E4FD8;
-  --color-accent-tint:  #E3ECFF;
-  --color-danger:       #D93A3A;
-  --color-success:      #1F9D63;
+  /* ── New design palette ── */
+  --color-navy:      #112250;
+  --color-sapphire:  #3B507D;
+  --color-taupe:     #BEB7A7;
+  --color-champagne: #E7E2CE;
+  --color-ivory:     #F5F4F0;
+  --color-danger:    #A63D32;
+  --color-success:   #4F7A4A;
 
-  --font-display: "Doto", monospace;
-  --font-sans:    "Geist", system-ui, sans-serif;
-  --font-mono:    "Geist Mono", "Courier New", monospace;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans:    "Karla", system-ui, sans-serif;
 }
 
 *, *::before, *::after {
@@ -28,9 +23,10 @@ html {
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-ink);
+  background-color: var(--color-ivory);
+  color: var(--color-navy);
   font-family: var(--font-sans);
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
@@ -38,12 +34,12 @@ body {
 }
 
 ::selection {
-  background-color: color-mix(in srgb, var(--color-accent) 25%, transparent);
-  color: var(--color-ink);
+  background-color: color-mix(in srgb, var(--color-sapphire) 20%, transparent);
+  color: var(--color-navy);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-sapphire);
   outline-offset: 2px;
 }
 
@@ -54,12 +50,11 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-line);
+  background: var(--color-champagne);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-ink-soft);
-  opacity: 0.3;
+  background: var(--color-taupe);
   border-radius: 3px;
 }
 
@@ -72,10 +67,52 @@ body {
   display: none;
 }
 
+/* ── Ticker / marquee animation ── */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  animation: ticker-scroll 40s linear infinite;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* ── Line draw animation ── */
+@keyframes line-draw {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+.line-draw {
+  animation: line-draw 0.8s ease-out forwards;
+}
+
+/* ── Phone chat illustration scroll (vertical) ── */
+@keyframes phone-scroll {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+
+/* ── Date input custom arrow ── */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+  filter: invert(23%) sepia(27%) saturate(748%) hue-rotate(190deg);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .ticker-track {
+    animation-play-state: paused;
   }
 }

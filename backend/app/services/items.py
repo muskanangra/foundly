@@ -1,17 +1,12 @@
-"""
-Item query service.
+"""Item serialization and DB-query helpers."""
 
-The search function is TEMPORARY: replaced by Trie + Hash Table in Part 2.
-"""
-
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.item import FoundItem
-from app.models.category import Category
 from app.config import settings
 
 
@@ -43,10 +38,32 @@ def serialize_item(item: FoundItem, current_user_id: Optional[int]) -> dict:
     }
 
 
-# TEMPORARY: replaced by Trie + Hash Table in Part 2
-def search_items_query(
+def make_item_summary(item: FoundItem) -> dict:
+    """
+    Build the summary dict stored in the SearchIndex items_table.
+    Includes owner_id for internal is_owner resolution; never sent to clients.
+    Category relationship must be loaded before calling this.
+    """
+    return {
+        "id": item.id,
+        "name": item.name,
+        "description": item.description or "",
+        "location": item.location,
+        "found_at": item.found_at,
+        "category": {
+            "id": item.category.id,
+            "name": item.category.name,
+            "slug": item.category.slug,
+        },
+        "image_url": image_url(item.image_path),
+        "status": item.status,
+        "created_at": item.created_at,
+        "owner_id": item.owner_id,
+    }
+
+
+def db_list_items(
     db: Session,
-    q: Optional[str] = None,
     category_id: Optional[int] = None,
     location: Optional[str] = None,
     date_from: Optional[str] = None,
@@ -56,20 +73,15 @@ def search_items_query(
     page_size: int = 12,
 ):
     """
-    Build and execute a paginated active-items query.
-
-    Text search (q) is a TEMPORARY case-insensitive ILIKE on item name.
-    This will be replaced by the Trie + Hash Table implementation in Part 2.
+    Paginated active-items query WITHOUT text search.
+    Used by GET /items when no q parameter is given.
+    Text search (q) is handled entirely in-memory by SearchIndex.
     """
     stmt = (
         select(FoundItem)
         .where(FoundItem.status == "active")
         .options(selectinload(FoundItem.category))
     )
-
-    # TEMPORARY text search — will be replaced by Trie in Part 2
-    if q:
-        stmt = stmt.where(FoundItem.name.ilike(f"%{q}%"))
 
     if category_id:
         stmt = stmt.where(FoundItem.category_id == category_id)
@@ -82,7 +94,6 @@ def search_items_query(
             dt_from = datetime.fromisoformat(date_from)
             if dt_from.tzinfo is None:
                 dt_from = dt_from.replace(tzinfo=timezone.utc)
-            # Inclusive: start of that day
             dt_from = dt_from.replace(hour=0, minute=0, second=0, microsecond=0)
             stmt = stmt.where(FoundItem.found_at >= dt_from)
         except ValueError:
@@ -93,23 +104,19 @@ def search_items_query(
             dt_to = datetime.fromisoformat(date_to)
             if dt_to.tzinfo is None:
                 dt_to = dt_to.replace(tzinfo=timezone.utc)
-            # Inclusive: end of that day
             dt_to = dt_to.replace(hour=23, minute=59, second=59, microsecond=999999)
             stmt = stmt.where(FoundItem.found_at <= dt_to)
         except ValueError:
             pass
 
-    # Count before pagination
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = db.execute(count_stmt).scalar_one()
 
-    # Ordering
     if sort == "oldest":
-        stmt = stmt.order_by(FoundItem.created_at.asc())
+        stmt = stmt.order_by(FoundItem.found_at.asc())
     else:
-        stmt = stmt.order_by(FoundItem.created_at.desc())
+        stmt = stmt.order_by(FoundItem.found_at.desc())
 
-    # Pagination
     offset = (page - 1) * page_size
     stmt = stmt.offset(offset).limit(page_size)
 

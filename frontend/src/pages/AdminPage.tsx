@@ -55,15 +55,17 @@ export default function AdminPage() {
     <div className="mx-auto max-w-4xl px-6 py-10 md:py-16">
       <div className="mb-10">
         <div className="flex items-center gap-2 mb-1">
-          <Shield size={18} className="text-ink-soft" aria-hidden="true" />
-          <h1 className="text-2xl font-semibold text-ink md:text-3xl">Admin Dashboard</h1>
+          <Shield size={18} className="text-sapphire/60" aria-hidden="true" />
+          <h1 className="font-display text-[40px] md:text-[48px] font-semibold text-navy leading-tight">
+            Admin Dashboard
+          </h1>
         </div>
-        <p className="text-sm text-ink-soft">Manage reports and monitor campus activity.</p>
+        <p className="font-sans text-base text-sapphire/70">Manage reports and monitor campus activity.</p>
       </div>
 
       {/* Stats */}
       {statsError ? (
-        <div className="mb-10 rounded-[10px] border border-line bg-surface p-4 font-mono text-xs uppercase tracking-widest text-ink-soft">
+        <div className="mb-10 rounded-2xl border border-taupe/30 bg-champagne p-4 font-sans text-sm text-sapphire/60">
           Could not load stats.
         </div>
       ) : (
@@ -95,20 +97,18 @@ export default function AdminPage() {
 
       {/* Reports */}
       <div>
-        <h2 className="mb-4 font-mono text-xs font-semibold uppercase tracking-widest text-ink">
-          Reports
-        </h2>
+        <h2 className="mb-4 font-sans text-base font-semibold text-navy">Reports</h2>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-1 border-b border-line">
+        <div className="mb-6 flex gap-6 border-b border-taupe/40">
           {(['open', 'dismissed', 'actioned'] as ReportStatus[]).map((s) => (
             <button
               key={s}
               onClick={() => setTab(s)}
-              className={`pb-3 px-4 font-mono text-xs font-semibold uppercase tracking-widest transition-colors ${
+              className={`pb-3 font-sans text-[15px] font-medium capitalize transition-colors relative ${
                 tab === s
-                  ? 'border-b-2 border-accent text-accent -mb-px'
-                  : 'text-ink-soft hover:text-ink'
+                  ? 'text-navy after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-navy after:rounded-t-sm'
+                  : 'text-sapphire/50 hover:text-sapphire'
               }`}
             >
               {s}
@@ -119,7 +119,7 @@ export default function AdminPage() {
         {reportsLoading && (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-24 animate-pulse rounded-[10px] bg-surface-2" />
+              <div key={i} className="h-24 animate-pulse rounded-2xl bg-champagne" />
             ))}
           </div>
         )}
@@ -168,22 +168,22 @@ function StatCard({
   accent?: 'success' | 'danger'
 }) {
   return (
-    <div className="rounded-[10px] border border-line bg-surface p-4">
-      <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-[5px] border ${
+    <div className="rounded-2xl border border-taupe/30 bg-champagne p-4">
+      <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl border ${
         accent === 'success'
           ? 'border-success/20 bg-success/10 text-success'
           : accent === 'danger'
           ? 'border-danger/20 bg-danger/10 text-danger'
-          : 'border-line bg-surface-2 text-ink-soft'
+          : 'border-taupe/40 bg-ivory text-sapphire/60'
       }`}>
         {icon}
       </div>
       {value === null ? (
-        <div className="h-7 w-16 animate-pulse rounded-[5px] bg-surface-2" />
+        <div className="h-7 w-16 animate-pulse rounded-xl bg-taupe/20" />
       ) : (
-        <p className="font-display text-2xl text-ink">{value.toLocaleString()}</p>
+        <p className="font-display text-[32px] font-semibold text-navy leading-none">{value.toLocaleString()}</p>
       )}
-      <p className="mt-0.5 font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft">{label}</p>
+      <p className="mt-1.5 font-sans text-sm text-sapphire/70">{label}</p>
     </div>
   )
 }
@@ -210,10 +210,10 @@ function ReportRow({
   }
 
   return (
-    <div className="rounded-[10px] border border-line bg-surface px-5 py-4">
+    <div className="rounded-2xl border border-taupe/30 bg-champagne px-5 py-4">
       <div className="flex items-start gap-4">
         {/* Item thumbnail */}
-        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[5px] border border-line bg-surface-2">
+        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-taupe/30 bg-ivory">
           <img
             src={report.item.image_url}
             alt={report.item.name}
@@ -227,28 +227,28 @@ function ReportRow({
               href={`/items/${report.item.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-sm text-ink hover:text-accent transition-colors truncate"
+              className="font-sans font-semibold text-sm text-navy hover:text-sapphire transition-colors truncate"
             >
               {report.item.name}
               <ExternalLink size={11} className="inline ml-0.5 opacity-60" />
             </a>
             {report.status === 'actioned' && <StatusBadge status="removed" />}
             {report.status === 'dismissed' && (
-              <span className="font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft border border-line rounded-[3px] px-2 py-0.5">
+              <span className="font-sans text-xs text-sapphire/60 border border-taupe/40 rounded-full px-2 py-0.5">
                 dismissed
               </span>
             )}
             {report.status === 'open' && (
-              <span className="font-mono text-[0.6rem] uppercase tracking-widest text-danger border border-danger/20 bg-danger/10 rounded-[3px] px-2 py-0.5">
+              <span className="font-sans text-xs text-danger border border-danger/20 bg-danger/10 rounded-full px-2 py-0.5">
                 open
               </span>
             )}
           </div>
-          <p className="text-xs text-ink-soft">
+          <p className="font-sans text-sm text-sapphire/70">
             <span className="font-medium">{reasonLabels[report.reason] ?? report.reason}</span>
             {report.note && ` — ${report.note}`}
           </p>
-          <p className="font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft/50">
+          <p className="font-sans text-xs text-sapphire/50">
             Reported by {report.reporter.name} · {formatDate(report.created_at)}
           </p>
         </div>

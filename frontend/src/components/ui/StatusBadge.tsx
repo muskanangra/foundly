@@ -8,22 +8,21 @@ interface StatusBadgeProps {
 }
 
 const labels: Record<Status, string> = {
-  active:   'ACTIVE',
-  returned: 'RETURNED',
-  removed:  'REMOVED',
-  resolved: 'RESOLVED',
+  active:   'Active',
+  returned: 'Returned',
+  removed:  'Removed',
+  resolved: 'Resolved',
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={clsx(
-        'inline-flex items-center rounded-[3px] border px-2.5 py-0.5',
-        'font-mono text-[0.65rem] font-semibold uppercase tracking-widest',
-        status === 'active'   && 'border-accent text-accent',
-        status === 'returned' && 'border-success text-success',
-        status === 'removed'  && 'border-danger text-danger',
-        status === 'resolved' && 'border-line text-ink-soft',
+        'inline-flex items-center rounded-full border px-3 py-0.5 font-sans text-sm font-medium',
+        status === 'active'   && 'border-sapphire/30 text-sapphire bg-champagne',
+        status === 'returned' && 'border-success/30 text-success bg-success/10',
+        status === 'removed'  && 'border-danger/30 text-danger bg-danger/10',
+        status === 'resolved' && 'border-taupe text-sapphire/70 bg-champagne/50',
         className,
       )}
     >

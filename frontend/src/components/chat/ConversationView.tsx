@@ -7,10 +7,11 @@ import {
   type ChangeEvent,
 } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Send, Image as ImageIcon, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Send, Image as ImageIcon, ExternalLink, ChevronDown } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../ui/Toast'
+import { useRealtime } from '../../context/RealtimeProvider'
 import { getMessages, sendMessage, sendImage, resolveConversation } from '../../api/conversations'
 import { ApiError } from '../../api/client'
 import { formatRelativeTime, formatDate } from '../../lib/time'
@@ -34,6 +35,8 @@ function isSameDay(a: string, b: string) {
   return new Date(a).toDateString() === new Date(b).toDateString()
 }
 
+const NEAR_BOTTOM = 120
+
 export function ConversationView({
   conversation,
   onResolved,
@@ -41,32 +44,93 @@ export function ConversationView({
 }: ConversationViewProps) {
   const { user } = useAuth()
   const { addToast } = useToast()
+  const { subscribe, refreshUnreadCount } = useRealtime()
   const [messages, setMessages] = useState<Message[]>([])
+  const [messagesLoading, setMessagesLoading] = useState(true)
   const [pending, setPending] = useState<PendingMessage[]>([])
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [resolving, setResolving] = useState(false)
+  const [newMessagesBanner, setNewMessagesBanner] = useState(false)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const initialScrollDone = useRef(false)
+  const sentIdsRef = useRef<Set<number>>(new Set())
 
-  const loadMessages = useCallback(() => {
+  const isNearBottom = useCallback(() => {
+    const el = scrollAreaRef.current
+    if (!el) return true
+    return el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM
+  }, [])
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const el = scrollAreaRef.current
+    if (!el) return
+    if (behavior === 'instant') {
+      el.scrollTop = el.scrollHeight
+    } else {
+      el.scrollTo({ top: el.scrollHeight, behavior })
+    }
+  }, [])
+
+  const loadMessages = useCallback((isInitial = false) => {
     getMessages(conversation.id)
-      .then(setMessages)
-      .catch(() => {})
-  }, [conversation.id])
+      .then((msgs) => {
+        if (isInitial) {
+          setMessages(msgs)
+          refreshUnreadCount()
+          setTimeout(() => {
+            scrollToBottom('instant')
+            initialScrollDone.current = true
+            setMessagesLoading(false)
+          }, 0)
+        } else {
+          setMessages((prev) => {
+            if (msgs.length > prev.length) {
+              if (isNearBottom()) {
+                setTimeout(() => scrollToBottom(), 50)
+              } else {
+                setNewMessagesBanner(true)
+              }
+            }
+            return msgs
+          })
+          refreshUnreadCount()
+        }
+      })
+      .catch(() => { if (isInitial) setMessagesLoading(false) })
+  }, [conversation.id, refreshUnreadCount, scrollToBottom, isNearBottom])
 
-  useEffect(() => { loadMessages() }, [loadMessages])
-
-  /* Poll for new messages every 10s */
   useEffect(() => {
-    const interval = setInterval(loadMessages, 10_000)
-    return () => clearInterval(interval)
+    initialScrollDone.current = false
+    setMessagesLoading(true)
+    loadMessages(true)
   }, [loadMessages])
 
-  /* Scroll to bottom when messages change */
+  /* Real-time: add incoming messages, dedupe by id */
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, pending])
+    return subscribe('message', (data) => {
+      const msg = data as Message
+      if (msg.conversation_id !== conversation.id) return
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev
+        return [...prev, msg]
+      })
+      /* Only auto-scroll if already near bottom */
+      if (isNearBottom()) {
+        setTimeout(() => scrollToBottom(), 50)
+      } else {
+        setNewMessagesBanner(true)
+      }
+    })
+  }, [subscribe, conversation.id, isNearBottom, scrollToBottom])
+
+  /* Poll every 10s as a fallback; never scrolls (isInitial=false) */
+  useEffect(() => {
+    const interval = setInterval(() => loadMessages(false), 10_000)
+    return () => clearInterval(interval)
+  }, [loadMessages])
 
   const handleSend = async () => {
     if (!text.trim() || sending) return
@@ -75,9 +139,13 @@ export function ConversationView({
     setText('')
     setPending((p) => [...p, { tempId, text: content, sending: true, failed: false }])
     setSending(true)
+    setTimeout(() => scrollToBottom(), 0)
     try {
       const msg = await sendMessage(conversation.id, content)
-      setMessages((prev) => [...prev, msg])
+      sentIdsRef.current.add(msg.id)
+      setMessages((prev) =>
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+      )
       setPending((p) => p.filter((m) => m.tempId !== tempId))
     } catch {
       setPending((p) =>
@@ -101,9 +169,13 @@ export function ConversationView({
     const tempId = Date.now()
     const preview = URL.createObjectURL(file)
     setPending((p) => [...p, { tempId, imagePreview: preview, sending: true, failed: false }])
+    setTimeout(() => scrollToBottom(), 0)
     try {
       const msg = await sendImage(conversation.id, file)
-      setMessages((prev) => [...prev, msg])
+      sentIdsRef.current.add(msg.id)
+      setMessages((prev) =>
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+      )
       setPending((p) => p.filter((m) => m.tempId !== tempId))
     } catch {
       setPending((p) =>
@@ -120,7 +192,10 @@ export function ConversationView({
     setPending((p) => p.map((m) => (m.tempId === pm.tempId ? { ...m, sending: true, failed: false } : m)))
     try {
       const msg = await sendMessage(conversation.id, pm.text)
-      setMessages((prev) => [...prev, msg])
+      sentIdsRef.current.add(msg.id)
+      setMessages((prev) =>
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+      )
       setPending((p) => p.filter((m) => m.tempId !== pm.tempId))
     } catch {
       setPending((p) => p.map((m) => (m.tempId === pm.tempId ? { ...m, sending: false, failed: true } : m)))
@@ -140,16 +215,21 @@ export function ConversationView({
     }
   }
 
+  const handleScrollToNew = () => {
+    scrollToBottom()
+    setNewMessagesBanner(false)
+  }
+
   const isResolved = conversation.status === 'resolved'
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-ivory">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-line px-4 py-3 bg-surface">
+      <div className="flex items-center gap-3 border-b border-taupe/40 px-4 py-3 bg-ivory">
         {showBackButton && (
           <Link
             to="/chats"
-            className="rounded-[5px] p-1.5 text-ink-soft hover:bg-surface-2 hover:text-ink transition-colors"
+            className="rounded-full p-1.5 text-sapphire hover:bg-champagne transition-colors"
             aria-label="Back to chats"
           >
             <ArrowLeft size={18} />
@@ -158,22 +238,24 @@ export function ConversationView({
 
         {/* Item thumbnail */}
         <Link to={`/items/${conversation.item.id}`} className="shrink-0">
-          <div className="h-10 w-10 overflow-hidden rounded-[5px] border border-line">
+          <div className="h-10 w-10 overflow-hidden rounded-xl border border-taupe/30 bg-champagne">
             <img
               src={conversation.item.image_url}
               alt={conversation.item.name}
               className="h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         </Link>
 
         <div className="flex flex-1 flex-col min-w-0">
-          <span className="font-semibold text-sm text-ink truncate">
+          <span className="font-sans font-semibold text-sm text-navy truncate">
             {conversation.other_user.name}
           </span>
           <Link
             to={`/items/${conversation.item.id}`}
-            className="font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft hover:text-accent transition-colors truncate"
+            className="font-display italic text-[15px] text-sapphire/70 hover:text-sapphire transition-colors truncate"
           >
             {conversation.item.name}
             <ExternalLink size={10} className="inline ml-0.5" />
@@ -186,15 +268,30 @@ export function ConversationView({
           </Button>
         )}
         {isResolved && (
-          <span className="font-mono text-[0.6rem] uppercase tracking-widest text-success border border-success/30 bg-success/10 rounded-[3px] px-2.5 py-1">
+          <span className="font-sans text-xs text-success border border-success/30 bg-success/10 rounded-full px-2.5 py-1">
             Resolved
           </span>
         )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-bg px-4 py-4 space-y-3">
-        {messages.map((msg, i) => {
+      {/* Messages scroll area */}
+      <div
+        ref={scrollAreaRef}
+        className="relative flex-1 overflow-y-auto px-4 py-4 space-y-3"
+        onScroll={() => {
+          if (isNearBottom()) setNewMessagesBanner(false)
+        }}
+      >
+        {messagesLoading && (
+          <div className="flex flex-col gap-3">
+            {[false, true, false, true, false].map((isMine, i) => (
+              <div key={i} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                <div className={`h-10 rounded-2xl bg-champagne animate-pulse ${isMine ? 'w-40' : 'w-56'}`} />
+              </div>
+            ))}
+          </div>
+        )}
+        {!messagesLoading && messages.map((msg, i) => {
           const isMine = msg.sender_id === user?.id
           const showDate =
             i === 0 || !isSameDay(messages[i - 1].created_at, msg.created_at)
@@ -203,30 +300,32 @@ export function ConversationView({
             <div key={msg.id}>
               {showDate && (
                 <div className="text-center py-2">
-                  <span className="font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft/50 bg-surface border border-line rounded-[3px] px-3 py-0.5">
+                  <span className="font-sans text-xs text-sapphire/50 bg-champagne border border-taupe/30 rounded-full px-3 py-0.5">
                     {formatDate(msg.created_at)}
                   </span>
                 </div>
               )}
               <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] rounded-[10px] px-4 py-2.5 ${
+                <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
                   isMine
-                    ? 'bg-accent text-white rounded-tr-[3px]'
-                    : 'bg-surface border border-line text-ink rounded-tl-[3px]'
+                    ? 'bg-navy text-ivory rounded-tr-sm'
+                    : 'bg-champagne border border-taupe/30 text-navy rounded-tl-sm'
                 }`}>
-                  {msg.text && <p className="text-sm leading-relaxed">{msg.text}</p>}
+                  {msg.text && (
+                    <p className="font-sans text-sm leading-relaxed">{msg.text}</p>
+                  )}
                   {msg.image_url && (
                     <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
                       <img
                         src={msg.image_url}
                         alt="Shared image"
-                        className="max-w-[200px] rounded-[5px]"
+                        className="max-w-[200px] rounded-xl"
                         loading="lazy"
                       />
                     </a>
                   )}
-                  <p className={`mt-0.5 text-right font-mono text-[0.55rem] ${
-                    isMine ? 'text-white/60' : 'text-ink-soft/50'
+                  <p className={`mt-0.5 text-right font-sans text-[11px] ${
+                    isMine ? 'text-ivory/50' : 'text-sapphire/40'
                   }`}>
                     {formatRelativeTime(msg.created_at)}
                   </p>
@@ -239,19 +338,19 @@ export function ConversationView({
         {/* Pending messages */}
         {pending.map((pm) => (
           <div key={pm.tempId} className="flex justify-end">
-            <div className="max-w-[75%] rounded-[10px] rounded-tr-[3px] bg-accent/70 px-4 py-2.5">
-              {pm.text && <p className="text-sm text-white leading-relaxed">{pm.text}</p>}
+            <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-navy/60 px-4 py-2.5">
+              {pm.text && <p className="font-sans text-sm text-ivory leading-relaxed">{pm.text}</p>}
               {pm.imagePreview && (
-                <img src={pm.imagePreview} alt="" className="max-w-[200px] rounded-[5px] opacity-70" />
+                <img src={pm.imagePreview} alt="" className="max-w-[200px] rounded-xl opacity-70" />
               )}
               <div className="mt-0.5 flex items-center justify-end gap-1">
                 {pm.sending && (
-                  <span className="font-mono text-[0.55rem] text-white/60">Sending…</span>
+                  <span className="font-sans text-[11px] text-ivory/50">Sending…</span>
                 )}
                 {pm.failed && (
                   <button
                     onClick={() => void handleRetry(pm)}
-                    className="font-mono text-[0.55rem] text-white/80 underline"
+                    className="font-sans text-[11px] text-ivory/80 underline"
                   >
                     Failed — retry
                   </button>
@@ -262,23 +361,32 @@ export function ConversationView({
         ))}
 
         <div ref={bottomRef} />
+
+        {/* New messages banner */}
+        {newMessagesBanner && (
+          <button
+            onClick={handleScrollToNew}
+            className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-navy px-4 py-2 font-sans text-sm text-ivory shadow-lg hover:bg-sapphire transition-colors"
+          >
+            New messages
+            <ChevronDown size={14} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Composer */}
       {isResolved ? (
-        <div className="border-t border-line bg-surface px-4 py-3 text-center font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft">
+        <div className="border-t border-taupe/40 bg-ivory px-4 py-3 text-center font-sans text-sm text-sapphire/50">
           This conversation has been resolved.
         </div>
       ) : (
-        <div className="border-t border-line bg-surface px-4 py-3 flex items-end gap-2">
+        <div className="border-t border-taupe/40 bg-ivory px-4 py-3 flex items-end gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
             aria-label="Send image"
-            className="inline-flex items-stretch cursor-pointer rounded-[5px] overflow-hidden border border-line hover:border-accent transition-colors shrink-0"
+            className="h-10 w-10 flex items-center justify-center rounded-full border border-taupe/40 bg-champagne text-sapphire/60 hover:bg-champagne/80 hover:text-sapphire transition-colors shrink-0"
           >
-            <span className="flex items-center justify-center self-stretch shrink-0 w-7 bg-surface-2 text-ink-soft" aria-hidden="true">
-              <ImageIcon size={14} />
-            </span>
+            <ImageIcon size={15} aria-hidden="true" />
           </button>
           <input
             ref={fileInputRef}
@@ -295,7 +403,7 @@ export function ConversationView({
             placeholder="Type a message… (Enter to send)"
             rows={1}
             aria-label="Message"
-            className="flex-1 resize-none rounded-[5px] border border-line bg-bg px-3 py-2 text-sm text-ink placeholder:text-ink-soft outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent/30 max-h-28 overflow-y-auto"
+            className="flex-1 resize-none rounded-full border border-taupe/40 bg-ivory px-4 py-2.5 font-sans text-sm text-navy placeholder:text-taupe/80 outline-none transition-colors focus:border-sapphire focus:ring-2 focus:ring-sapphire/15 max-h-28 overflow-y-auto"
           />
 
           <Button
@@ -304,7 +412,7 @@ export function ConversationView({
             onClick={() => void handleSend()}
             disabled={!text.trim() || sending}
             aria-label="Send message"
-            className="shrink-0"
+            className="shrink-0 h-10 w-10 !p-0 !rounded-full flex items-center justify-center"
           >
             <Send size={14} aria-hidden="true" />
           </Button>

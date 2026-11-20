@@ -62,11 +62,13 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10 md:py-16">
-      <div className="mb-8 flex items-center justify-between gap-4">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-ink md:text-3xl">Notifications</h1>
+          <h1 className="font-display text-[40px] md:text-[48px] font-semibold text-navy leading-tight">
+            Notifications
+          </h1>
           {unreadCount > 0 && (
-            <p className="mt-1 font-mono text-[0.6rem] uppercase tracking-widest text-ink-soft">
+            <p className="mt-1 font-sans text-sm text-sapphire/70">
               {unreadCount} unread
             </p>
           )}
@@ -85,13 +87,13 @@ export default function NotificationsPage() {
       </div>
 
       {loading && (
-        <div className="flex flex-col divide-y divide-line rounded-[10px] border border-line overflow-hidden">
+        <div className="flex flex-col gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-3 p-4 animate-pulse">
-              <div className="h-9 w-9 shrink-0 rounded-[5px] bg-surface-2" />
+            <div key={i} className="flex gap-3 p-4 animate-pulse rounded-2xl bg-champagne">
+              <div className="h-9 w-9 shrink-0 rounded-xl bg-taupe/20" />
               <div className="flex flex-1 flex-col gap-2 justify-center">
-                <div className="h-3 w-48 rounded bg-surface-2" />
-                <div className="h-2.5 w-64 rounded bg-surface-2" />
+                <div className="h-3 w-48 rounded-lg bg-taupe/20" />
+                <div className="h-2.5 w-64 rounded-lg bg-taupe/20" />
               </div>
             </div>
           ))}
@@ -109,7 +111,7 @@ export default function NotificationsPage() {
       )}
 
       {!loading && !error && notifications.length > 0 && (
-        <div className="flex flex-col divide-y divide-line rounded-[10px] border border-line overflow-hidden bg-surface">
+        <div className="flex flex-col gap-2">
           {notifications.map((n) => (
             <NotificationRow
               key={n.id}
@@ -136,16 +138,18 @@ function NotificationRow({
     <Link
       to={n.link}
       onClick={onRead}
-      className={`flex items-start gap-3 px-5 py-4 transition-colors hover:bg-surface-2 ${
-        n.is_read ? '' : 'bg-accent-tint'
+      className={`flex items-start gap-3 px-5 py-4 rounded-2xl border transition-colors hover:border-sapphire/20 ${
+        n.is_read
+          ? 'bg-champagne border-taupe/30'
+          : 'bg-champagne border-sapphire/30 ring-1 ring-sapphire/10'
       }`}
     >
       {/* Type icon */}
       <div
-        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[5px] border ${
+        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
           isMessage
-            ? 'border-accent/20 bg-accent-tint text-accent'
-            : 'border-line bg-surface-2 text-ink-soft'
+            ? 'border-sapphire/20 bg-sapphire/10 text-sapphire'
+            : 'border-taupe/40 bg-ivory text-sapphire/60'
         }`}
       >
         {isMessage ? (
@@ -157,18 +161,18 @@ function NotificationRow({
 
       <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">
         <div className="flex items-center justify-between gap-2">
-          <span className={`truncate text-sm ${n.is_read ? 'font-medium text-ink' : 'font-semibold text-ink'}`}>
+          <span className={`truncate font-sans text-sm ${n.is_read ? 'font-medium text-sapphire' : 'font-semibold text-navy'}`}>
             {n.title}
           </span>
-          <span className="shrink-0 font-mono text-[0.6rem] text-ink-soft/60">
+          <span className="shrink-0 font-sans text-xs text-sapphire/50">
             {formatRelativeTime(n.created_at)}
           </span>
         </div>
-        <span className="truncate text-xs text-ink-soft">{n.body}</span>
+        <span className="truncate font-sans text-sm text-sapphire/60">{n.body}</span>
       </div>
 
       {!n.is_read && (
-        <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+        <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-sapphire" aria-hidden="true" />
       )}
     </Link>
   )
